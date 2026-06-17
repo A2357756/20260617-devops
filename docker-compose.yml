@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: fastapi_web
+    restart: always
+    expose:
+      - "8000"
+    environment:
+      - APP_ENV=production
+      - APP_VERSION=v1.0.0
+      - GITHUB_WEBHOOK_SECRET=your_github_webhook_secret_here  # Change this to your secure secret
+    volumes:
+      # Optional: Mount the workspace directory to the container so git pulls on the VM reflect immediately.
+      # This is useful for VM webhook auto-deployments.
+      - .:/app
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
