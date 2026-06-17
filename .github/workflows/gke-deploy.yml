@@ -1,0 +1,74 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
+  GKE_ZONE: ${{ secrets.GKE_ZONE }}
+  GAR_LOCATION: us-central1 # Artifact Registry location
+  GAR_REPOSITORY: fastapi-repo # Artifact Registry repository name
+  IMAGE_NAME: fastapi-nginx-demo
+
+jobs:
+  build-and-deploy:
+    name: Build, Push, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout code from GitHub
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Step 2: Authenticate to Google Cloud
+    # You will need to create a GCP Service Account, download its JSON key,
+    # and add it as a GitHub Secret named 'GCP_SA_KEY'.
+    - name: Google Cloud Auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    # Step 3: Set up gcloud CLI
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    # Step 4: Configure Docker to use Artifact Registry
+    - name: Authorize Docker
+      run: |
+        gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
+
+    # Step 5: Build and Tag the Docker Image
+    - name: Build Docker Image
+      run: |
+        docker build \
+          -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          -t ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest \
+          .
+
+    # Step 6: Push Image to Google Artifact Registry
+    - name: Push Docker Image
+      run: |
+        docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        docker push ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.GAR_REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
+
+    # Step 7: Get GKE Credentials and set up kubectl context
+    - name: Connect to GKE Cluster
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER_NAME }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Step 8: Update Deployment Image & Apply Manifests
+    # This dynamically injects the newly built image version into our deployment manifest
+    - name: Deploy to GKE
+      run: |
+        # Replace the image placeholder in k8s/deployment.yaml with our actual Artifact Registry path
+        sed -i 's|image:.*|image: '${{ env.GAR_LOCATION }}'-docker.pkg.dev/'${{ env.GCP_PROJECT_ID }}'/'${{ env.GAR_REPOSITORY }}'/'${{ env.IMAGE_NAME }}':'${{ github.sha }}'|g' k8s/deployment.yaml
+        
+        # Apply the Kubernetes manifests
+        kubectl apply -f k8s/
+        
+        # Verify the rolling update status
+        kubectl rollout status deployment/fastapi-nginx-demo
