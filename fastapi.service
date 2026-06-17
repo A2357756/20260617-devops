@@ -1,0 +1,14 @@
+[Unit]
+Description=FastAPI DevOps Control Center Service
+After=network.target
+
+[Service]
+User=jenny
+WorkingDirectory=/home/jenny/20260617-devops
+ExecStart=/home/jenny/20260617-devops/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+Environment=APP_ENV=production APP_VERSION=v1.0.0 GITHUB_WEBHOOK_SECRET=devops_secure_webhook_secret_20260617
+
+[Install]
+WantedBy=multi-user.target

@@ -29,6 +29,11 @@ jobs:
         # Verify python syntax for all files in app directory
         python -m compileall app/
 
+    - name: Run Unit Tests
+      run: |
+        pytest app/test_main.py
+
+
   build-verification:
     name: Build Verification (Docker)
     runs-on: ubuntu-latest
