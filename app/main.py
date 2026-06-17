@@ -72,6 +72,10 @@ def verify_signature(payload: bytes, signature: str) -> bool:
         digestmod=hashlib.sha256
     ).hexdigest()
 
+    print(f"[Webhook Debug] Received Signature: {received_sha}")
+    print(f"[Webhook Debug] Expected Signature: {expected_sha}")
+    print(f"[Webhook Debug] Raw Payload Received: {payload.decode('utf-8', errors='ignore')}")
+
     return hmac.compare_digest(expected_sha, received_sha)
 
 
