@@ -13,14 +13,14 @@ from fastapi.responses import HTMLResponse, JSONResponse
 app = FastAPI(
     title="FastAPI GKE & VM Auto-Deploy Demo",
     description="A professional FastAPI template with Nginx proxy, GitHub auto-deploy webhook, and GKE health check endpoints.",
-    version="1.0.0"
+    version="1.0.1"
 )
 
 # Start time to calculate uptime
 START_TIME = time.time()
 
 # Environment configurations
-APP_VERSION = os.getenv("APP_VERSION", "v1.0.0")
+APP_VERSION = os.getenv("APP_VERSION", "v1.0.1")
 APP_ENV = os.getenv("APP_ENV", "production")
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET", "")
 
