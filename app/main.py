@@ -81,7 +81,7 @@ async def root():
     Landing page offering details about available endpoints.
     """
     return {
-        "message": "Welcome to the FastAPI + Nginx Demo App!",
+        "message": "Welcome to the FastAPI + Nginx Demo App! Webhook is fully functional!",
         "version": APP_VERSION,
         "environment": APP_ENV,
         "endpoints": {
