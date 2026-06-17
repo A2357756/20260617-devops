@@ -29,7 +29,9 @@ fi
 # Choose the deployment method that fits your environment:
 
 # --- METHOD A: Docker Compose Deployment (Recommended) ---
-if command -v docker &> /dev/null && [ -f "docker-compose.yml" ]; then
+# Disable Docker Compose by default to use Native VM Deployment (Systemd)
+USE_DOCKER_COMPOSE=false
+if [ "$USE_DOCKER_COMPOSE" = "true" ] && command -v docker &> /dev/null && [ -f "docker-compose.yml" ]; then
     echo "[Step 2] Docker Compose detected. Rebuilding and restarting containers..."
     
     # Try 'docker compose' (v2) and fallback to 'docker-compose' (v1)
