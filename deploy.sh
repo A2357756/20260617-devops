@@ -16,6 +16,8 @@ echo "=================================================="
 # and the git repository is already cloned in this directory.
 if [ -d ".git" ]; then
     echo "[Step 1] Pulling latest changes from Git..."
+    # Avoid Git "dubious ownership" error in containerized environments
+    git config --global --add safe.directory "$(pwd)" || true
     # Reset any local uncommitted changes if desired (caution: comment out if not wanted)
     # git reset --hard HEAD
     git pull origin main
