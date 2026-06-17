@@ -170,3 +170,5 @@ kubectl get service fastapi-nginx-service -w
 2. 執行 `kubectl apply -f k8s-demo.yaml`。
 3. 同時持續執行 `curl -s http://<GKE-EXTERNAL-IP>/status` 監控。
 4. **效果**：您會看見部分 Pod 顯示 `v1.0.0`，部分顯示 `v1.1.0`，期間 **完全沒有任何一個 request 失敗**（零停機時間 Zero-Downtime），最終所有 Pod 順利平滑升級！
+
+123
