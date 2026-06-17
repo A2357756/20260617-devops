@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fastapi-nginx-demo
+  namespace: default
+  labels:
+    app: fastapi-nginx-demo
+spec:
+  replicas: 3 # Start with 3 replicas to demonstrate K8s load balancing
+  selector:
+    matchLabels:
+      app: fastapi-nginx-demo
+  template:
+    metadata:
+      labels:
+        app: fastapi-nginx-demo
+    spec:
+      containers:
+      - name: fastapi-app
+        # Replace this placeholder with your actual GCP Artifact Registry / GCR image path
+        image: us-central1-docker.pkg.dev/your-project-id/fastapi-repo/fastapi-nginx-demo:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        
+        # Kubernetes Liveness & Readiness Probes using our always-healthy route
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        
+        # Environment variables for our application
+        env:
+        - name: APP_ENV
+          value: "production"
+        - name: APP_VERSION
+          value: "v1.0.0-gke"
+        
+        # Resource requests & limits (K8s Best Practice)
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
